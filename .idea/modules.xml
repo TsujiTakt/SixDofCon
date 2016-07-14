@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/SixDOFController.iml" filepath="$PROJECT_DIR$/SixDOFController.iml" />
+      <module fileurl="file://$PROJECT_DIR$/SixDofCon.iml" filepath="$PROJECT_DIR$/SixDofCon.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
