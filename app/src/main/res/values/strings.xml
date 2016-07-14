@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">卓上6軸コントローラ</string>
+    <string name="main_center_text">Test</string>
+    <string name="x_axis_accel">X軸加速度:</string>
+    <string name="y_axis_accel">Y軸加速度:</string>
+    <string name="z_axis_accel">Z軸加速度:</string>
+    <string name="rolling">ロー  :</string>
+    <string name="pitch">ピッチ:</string>
+    <string name="yawing">ヨー:</string>
+    <string name="x_diff">X軸変位:</string>
+    <string name="y_diff">Y軸変位:</string>
+    <string name="z_diff">Z軸変位:</string>
+    <string name="find_konashi">konashiを探す</string>
+    <string name="disconnect_konashi">konashiを切断する</string>
+    <string name="discon">接続されていません</string>
+</resources>
