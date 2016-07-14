@@ -20,6 +20,7 @@ import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.uxxu.konashi.lib.Konashi;
 import com.uxxu.konashi.lib.KonashiListener;
@@ -27,6 +28,7 @@ import com.uxxu.konashi.lib.KonashiManager;
 
 import org.jdeferred.DoneCallback;
 import org.jdeferred.DonePipe;
+import org.jdeferred.FailCallback;
 import org.jdeferred.Promise;
 
 import java.util.Timer;
@@ -158,6 +160,13 @@ public class MainFragment extends BaseFragment implements SensorEventListener {
                                                     public Promise<BluetoothGattCharacteristic, BletiaException, Void> pipeDone(BluetoothGattCharacteristic result) {
                                                         return mKonashiManager.uartBaudrate(Konashi.UART_RATE_9K6);
                                                     }
+                                                })
+                                                .fail(new FailCallback<BletiaException> (){
+
+                                                    @Override
+                                                    public void onFail(BletiaException result) {
+                                                        Toast.makeText(getBaseActivity(), result.getMessage(), Toast.LENGTH_SHORT).show();
+                                                    }
                                                 });
                                         }
 
@@ -208,8 +217,41 @@ public class MainFragment extends BaseFragment implements SensorEventListener {
                         yawingText.setText(getString(R.string.yawing) + " " + String.format("%02.08f",zAxisDispValue));
                     }
                 });
+                if(mKonashiManager.isReady()){
+                    mKonashiManager.uartWrite(String.format("%d",(int)xAxisDispValue) + ",")
+                            .then(new DonePipe<BluetoothGattCharacteristic, BluetoothGattCharacteristic, BletiaException, Void>() {
+                                @Override
+                                public Promise<BluetoothGattCharacteristic, BletiaException, Void> pipeDone(BluetoothGattCharacteristic result) {
+                                    return mKonashiManager.uartWrite(String.format("%d",(int)yAxisDispValue) + ",");
+                                }
+                            })
+                            .then(new DonePipe<BluetoothGattCharacteristic, BluetoothGattCharacteristic, BletiaException, Void>() {
+                                @Override
+                                public Promise<BluetoothGattCharacteristic, BletiaException, Void> pipeDone(BluetoothGattCharacteristic result) {
+                                    return mKonashiManager.uartWrite(String.format("%d",(int)zAxisDispValue) + ",");
+                                }
+                            })
+                            .then(new DonePipe<BluetoothGattCharacteristic, BluetoothGattCharacteristic, BletiaException, Void>() {
+                                @Override
+                                public Promise<BluetoothGattCharacteristic, BletiaException, Void> pipeDone(BluetoothGattCharacteristic result) {
+                                    return mKonashiManager.uartWrite(String.format("%02.02f",alphaDispValue) + ",");
+                                }
+                            })
+                            .then(new DonePipe<BluetoothGattCharacteristic, BluetoothGattCharacteristic, BletiaException, Void>() {
+                                @Override
+                                public Promise<BluetoothGattCharacteristic, BletiaException, Void> pipeDone(BluetoothGattCharacteristic result) {
+                                    return mKonashiManager.uartWrite(String.format("%02.02f",betaDispValue) + "\n");
+                                }
+                            })
+                            .fail(new FailCallback<BletiaException>() {
+                                @Override
+                                public void onFail(BletiaException result) {
+                                    Toast.makeText(getBaseActivity(), result.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                }
             }
-        },1000,1000);
+        },1000,500);
 
         return view;
     }
@@ -247,17 +289,17 @@ public class MainFragment extends BaseFragment implements SensorEventListener {
     public void calcurateSlope(){
         xAxisSlopeValue = atan(xAxisAccValue/zAxisAccValue);
         yAxisSlopeValue = atan(yAxisAccValue/zAxisAccValue);
-        if(toDegrees(xAxisSlopeValue) > 30.0){
-            alphaDispValue = 30.0F;
-        }else if(toDegrees(xAxisSlopeValue) < -30.0){
-            alphaDispValue = -30.0F;
+        if(toDegrees(xAxisSlopeValue) > 25.0){
+            alphaDispValue = 25.0F;
+        }else if(toDegrees(xAxisSlopeValue) < -25.0){
+            alphaDispValue = -25.0F;
         }else{
             alphaDispValue = (float)toDegrees(xAxisSlopeValue);
         }
-        if(toDegrees(yAxisSlopeValue) > 30.0){
-            betaDispValue = 30.0F;
-        }else if(toDegrees(yAxisSlopeValue) < -30.0){
-            betaDispValue = -30.0F;
+        if(toDegrees(yAxisSlopeValue) > 25.0){
+            betaDispValue = 25.0F;
+        }else if(toDegrees(yAxisSlopeValue) < -25.0){
+            betaDispValue = -25.0F;
         }else{
             betaDispValue = (float)toDegrees(yAxisSlopeValue);
         }
@@ -377,7 +419,19 @@ public class MainFragment extends BaseFragment implements SensorEventListener {
     @OnClick(R.id.button)
     public void konashiFind(){
         if(mKonashiManager.isConnected()){
-            mKonashiManager.disconnect();
+            mKonashiManager.digitalWrite(Konashi.LED2,Konashi.LOW)
+                    .done(new DoneCallback<BluetoothGattCharacteristic>() {
+                        @Override
+                        public void onDone(BluetoothGattCharacteristic result) {
+                            mKonashiManager.disconnect();
+                        }
+                    })
+                    .fail(new FailCallback<BletiaException>() {
+                        @Override
+                        public void onFail(BletiaException result) {
+                            Toast.makeText(getBaseActivity(),result.getMessage(),Toast.LENGTH_SHORT);
+                        }
+                    });
         }else {
             mKonashiManager.find(getBaseActivity());
         }
